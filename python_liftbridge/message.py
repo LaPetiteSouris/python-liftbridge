@@ -8,22 +8,21 @@ class Message():
     """
         This class represents a Message
     """
-
     def __init__(
-            self,
-            value,
-            subject,
-            key=None,
-            ack_inbox=None,
-            correlation_id=None,
-            offset=None,
-            timestamp=None,
+        self,
+        value,
+        stream,
+        key=None,
+        ack_inbox=None,
+        correlation_id=None,
+        offset=None,
+        timestamp=None,
     ):
         self.logger = getLogger(__name__)
         self.logger.addHandler(NullHandler())
         self.key = key
         self.value = value
-        self.subject = subject
+        self.stream = stream
         self.ack_inbox = ack_inbox
         self.correlation_id = correlation_id
         self.ack_policy = python_liftbridge.api_pb2.AckPolicy.Value('NONE')
@@ -51,7 +50,7 @@ class Message():
     def _build_message(self):
         message = self._create_message()
         message.value = str.encode(self.value)
-        message.subject = self.subject
+        message.stream = self.stream
         message.ackPolicy = self.ack_policy
         if self.key:
             message.key = str.encode(self.key)

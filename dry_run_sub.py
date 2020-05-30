@@ -1,6 +1,5 @@
 import json
-from python_liftbridge import Lift, Message, Stream, ErrStreamExists
-
+from python_liftbridge import Lift, Stream
 # Create a Liftbridge client.
 client = Lift(ip_address='localhost:9292', timeout=5)
 
@@ -13,5 +12,5 @@ for message in client.subscribe(
     try:
         msg = json.loads(message.value)
         print("value of event is ", msg.get("event_triggered"))
-    except Exception as e:
-        print("empty")
+    except Exception:
+        pass

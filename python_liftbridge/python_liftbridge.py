@@ -57,7 +57,7 @@ class Lift(BaseClient):
         for message in self.stub.Subscribe(subscribe_request):
             yield Message(
                 message.value,
-                message.subject,
+                message.stream,
                 offset=message.offset,
                 timestamp=message.timestamp,
                 key=message.key,
@@ -105,5 +105,25 @@ class Lift(BaseClient):
             )
 
     def _create_publish_request(self, message):
-        return python_liftbridge.api_pb2.PublishRequest(stream=message.subject,
-                                                        value=message.value)
+        publish_request_option = {
+            "stream": message.stream,
+            "value": message.value
+        }
+        try:
+            publish_request_option["key"] = message.key
+        except AttributeError:
+            pass
+        try:
+            publish_request_option["ackInbox"] = message.ack_inbox
+        except AttributeError:
+            pass
+        try:
+            publish_request_option["correlationId"] = message.correlation_id
+        except AttributeError:
+            pass
+        try:
+            publish_request_option["ackPolicy"] = message.ack_policy
+        except AttributeError:
+            pass
+        return python_liftbridge.api_pb2.PublishRequest(
+            **publish_request_option)
