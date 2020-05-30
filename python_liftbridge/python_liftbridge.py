@@ -13,7 +13,6 @@ logger.addHandler(NullHandler())
 
 
 class Lift(BaseClient):
-
     def fetch_metadata(self):
         # TODO
         return self._fetch_metadata(self._fetch_metadata_request())
@@ -46,8 +45,7 @@ class Lift(BaseClient):
         """
         logger.debug('Publishing a new message: %s' % message)
         return self._publish(
-            self._create_publish_request(message._build_message()),
-        )
+            self._create_publish_request(message._build_message()), )
 
     @handle_rpc_errors
     def _fetch_metadata(self, metadata_request):
@@ -90,24 +88,22 @@ class Lift(BaseClient):
     def _subscribe_request(self, stream):
         if stream.start_offset:
             return python_liftbridge.api_pb2.SubscribeRequest(
-                subject=stream.subject,
-                name=stream.name,
+                stream=stream.name,
                 startPosition=stream.start_position,
                 startOffset=stream.start_offset,
             )
         elif stream.start_timestamp:
             return python_liftbridge.api_pb2.SubscribeRequest(
-                subject=stream.subject,
-                name=stream.name,
+                stream=stream.name,
                 startPosition=stream.start_position,
                 startTimestamp=stream.start_timestamp,
             )
         else:
             return python_liftbridge.api_pb2.SubscribeRequest(
-                subject=stream.subject,
-                name=stream.name,
+                stream=stream.name,
                 startPosition=stream.start_position,
             )
 
     def _create_publish_request(self, message):
-        return python_liftbridge.api_pb2.PublishRequest(message=message)
+        return python_liftbridge.api_pb2.PublishRequest(stream=message.subject,
+                                                        value=message.value)
