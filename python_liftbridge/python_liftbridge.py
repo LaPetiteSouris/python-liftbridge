@@ -24,7 +24,8 @@ class Lift(BaseClient):
             is the end of the stream. It returns an ErrNoSuchStream if the given stream
             does not exist.
         """
-        print("toto")
+        # [TODO] use connection pooling here
+        # subscribe only to ISR
         logger.debug('Creating a new subscription to: %s' % stream)
         for message in self._subscribe(self._subscribe_request(stream)):
             yield message
