@@ -7,14 +7,21 @@ from python_liftbridge.errors import handle_rpc_errors
 from python_liftbridge.errors import handle_rpc_errors_in_generator
 from python_liftbridge.message import Message  # noqa: F401
 from python_liftbridge.stream import Stream  # noqa: F401
+from python_liftbridge.metadata import generate_meta_data, find_broker_addr_of_leader
 
 logger = getLogger(__name__)
 logger.addHandler(NullHandler())
 
 
-class Lift(BaseClient):
-    def fetch_metadata(self, streams=None):
-        return self._fetch_metadata(self._fetch_metadata_request(streams))
+class Lift(object):
+    def __init__(self, ip_address, **kargs):
+        self.conn = BaseClient(ip_address, **kargs)
+        self.meta_cache = None
+
+    def _refresh_metadata(self, streams=None):
+        meta_data_response = self._fetch_metadata(
+            self._fetch_metadata_request(streams))
+        self.meta_cache = generate_meta_data(meta_data_response)
 
     def subscribe(self, stream):
         """
@@ -24,8 +31,14 @@ class Lift(BaseClient):
             is the end of the stream. It returns an ErrNoSuchStream if the given stream
             does not exist.
         """
-        # [TODO] use connection pooling here
-        # subscribe only to ISR
+        # [TODO] refresh conn to point to ISR
+        self._refresh_metadata(stream)
+        # get an address, either leader or ISR follower.
+        # get leader address
+        leader_addr = find_broker_addr_of_leader(self.meta_cache, stream.name)
+        print("leader is", leader_addr)
+        # Refresh conn
+        self.conn = BaseClient(ip_address=leader_addr)
         logger.debug('Creating a new subscription to: %s' % stream)
         for message in self._subscribe(self._subscribe_request(stream)):
             yield message
@@ -50,12 +63,12 @@ class Lift(BaseClient):
 
     @handle_rpc_errors
     def _fetch_metadata(self, metadata_request):
-        response = self.stub.FetchMetadata(metadata_request)
+        response = self.conn.stub.FetchMetadata(metadata_request)
         return response
 
     @handle_rpc_errors_in_generator
     def _subscribe(self, subscribe_request):
-        for message in self.stub.Subscribe(subscribe_request):
+        for message in self.conn.stub.Subscribe(subscribe_request):
             yield Message(
                 message.value,
                 message.stream,
@@ -66,19 +79,19 @@ class Lift(BaseClient):
 
     @handle_rpc_errors
     def _create_stream(self, stream_request):
-        response = self.stub.CreateStream(stream_request)
+        response = self.conn.stub.CreateStream(stream_request)
         return response
 
     @handle_rpc_errors
     def _publish(self, publish_request):
-        response = self.stub.Publish(publish_request)
+        response = self.conn.stub.Publish(publish_request)
         return response
 
     def _fetch_metadata_request(self, streams=None):
         name = None
         if streams:
             name = streams.name
-        return python_liftbridge.api_pb2.FetchMetadataRequest(streams=name)
+        return python_liftbridge.api_pb2.FetchMetadataRequest(streams=[name])
 
     def _create_stream_request(self, stream):
         response = python_liftbridge.api_pb2.CreateStreamRequest(

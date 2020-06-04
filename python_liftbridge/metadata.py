@@ -30,6 +30,13 @@ def find_broker_by_id(entries, id):
     return next(x for x in entries if x.id == id)
 
 
+def find_broker_addr_of_leader(metadata, stream_name):
+    stream = next(x for x in metadata.streams if x.name == stream_name)
+    leader = next(x.leader for x in stream.partitions)
+    leader_info = find_broker_by_id(metadata.brokers, leader)
+    return leader_info.host + ":" + str(leader_info.port)
+
+
 def generate_meta_data(meta_data_response):
     streams = []
     # Broker

@@ -1,19 +1,14 @@
 import json
-from python_liftbridge import Lift, Stream, generate_meta_data
+from python_liftbridge import Lift, Stream
 # Create a Liftbridge client.
-client = Lift(ip_address='localhost:9294', timeout=5)
-stream = Stream(subject='test', name='test-stream')
+client = Lift(ip_address='localhost:9293', timeout=5)
 
-meta_data = client.fetch_metadata()
 
-meta_data_struct = generate_meta_data(meta_data)
-print(meta_data_struct)
-"""
 # Subscribe to the stream starting from the beginning.
 for message in client.subscribe(
         Stream(
-            subject='test2',
-            name='test2-stream',
+            subject='test4',
+            name='test4-stream',
             read_isr_replica=True
         ).start_at_earliest_received(), ):
     try:
@@ -21,4 +16,3 @@ for message in client.subscribe(
         print("value of event is ", msg.get("event_triggered"))
     except Exception:
         pass
-    """
