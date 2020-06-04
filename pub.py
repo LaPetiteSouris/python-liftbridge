@@ -18,13 +18,14 @@ client = Lift(ip_address='localhost:9292', timeout=5)
 
 # Create a stream attached to the NATS subject "foo".
 try:
-    client.create_stream(Stream(subject='test', name='test-stream'))
+    client.create_stream(
+        Stream(subject='test2', name='test2-stream', replication_factor=3))
 except ErrStreamExists:
     print('This stream already exists!')
 
 # Publish a message to "foo".
 while True:
     msg = {"event_triggered": my_random_string(5)}
-    client.publish(Message(value=json.dumps(msg), stream='foo-stream'))
+    client.publish(Message(value=json.dumps(msg), stream='test2-stream'))
     random_us = randint(10, 100) / 1000000.0
     sleep(random_us)

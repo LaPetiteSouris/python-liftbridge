@@ -50,5 +50,8 @@ class BaseClient(object):
         logger.debug('Closing channel')
         self.channel.close()
 
+    def refresh_metada(self):
+        pass
+
     def __repr__(self):
         return str(self.__dict__)

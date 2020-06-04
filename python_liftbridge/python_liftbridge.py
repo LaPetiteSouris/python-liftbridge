@@ -13,9 +13,8 @@ logger.addHandler(NullHandler())
 
 
 class Lift(BaseClient):
-    def fetch_metadata(self):
-        # TODO
-        return self._fetch_metadata(self._fetch_metadata_request())
+    def fetch_metadata(self, streams=None):
+        return self._fetch_metadata(self._fetch_metadata_request(streams))
 
     def subscribe(self, stream):
         """
@@ -25,6 +24,7 @@ class Lift(BaseClient):
             is the end of the stream. It returns an ErrNoSuchStream if the given stream
             does not exist.
         """
+        print("toto")
         logger.debug('Creating a new subscription to: %s' % stream)
         for message in self._subscribe(self._subscribe_request(stream)):
             yield message
@@ -73,8 +73,11 @@ class Lift(BaseClient):
         response = self.stub.Publish(publish_request)
         return response
 
-    def _fetch_metadata_request(self):
-        return python_liftbridge.api_pb2.FetchMetadataRequest()
+    def _fetch_metadata_request(self, streams=None):
+        name = None
+        if streams:
+            name = streams.name
+        return python_liftbridge.api_pb2.FetchMetadataRequest(streams=name)
 
     def _create_stream_request(self, stream):
         response = python_liftbridge.api_pb2.CreateStreamRequest(
@@ -86,23 +89,19 @@ class Lift(BaseClient):
         return response
 
     def _subscribe_request(self, stream):
+        subscribe_request_opts = {
+            "stream": stream.name,
+            "startPosition": stream.start_position
+        }
+
         if stream.start_offset:
-            return python_liftbridge.api_pb2.SubscribeRequest(
-                stream=stream.name,
-                startPosition=stream.start_position,
-                startOffset=stream.start_offset,
-            )
+            subscribe_request_opts["startOffset"] = stream.start_offset
         elif stream.start_timestamp:
-            return python_liftbridge.api_pb2.SubscribeRequest(
-                stream=stream.name,
-                startPosition=stream.start_position,
-                startTimestamp=stream.start_timestamp,
-            )
-        else:
-            return python_liftbridge.api_pb2.SubscribeRequest(
-                stream=stream.name,
-                startPosition=stream.start_position,
-            )
+            subscribe_request_opts["startTimestamp"] = stream.start_timestamp
+        elif stream.read_isr_replica:
+            subscribe_request_opts["readISRReplica"] = True
+        return python_liftbridge.api_pb2.SubscribeRequest(
+            **subscribe_request_opts)
 
     def _create_publish_request(self, message):
         publish_request_option = {
