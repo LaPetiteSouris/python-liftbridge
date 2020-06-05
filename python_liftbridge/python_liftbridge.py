@@ -7,7 +7,7 @@ from python_liftbridge.errors import handle_rpc_errors
 from python_liftbridge.errors import handle_rpc_errors_in_generator
 from python_liftbridge.message import Message  # noqa: F401
 from python_liftbridge.stream import Stream  # noqa: F401
-from python_liftbridge.metadata import generate_meta_data, find_broker_addr_of_leader
+from python_liftbridge.metadata import generate_meta_data, find_broker_addr
 
 logger = getLogger(__name__)
 logger.addHandler(NullHandler())
@@ -31,12 +31,12 @@ class Lift(object):
             is the end of the stream. It returns an ErrNoSuchStream if the given stream
             does not exist.
         """
-        # [TODO] refresh conn to point to ISR
         self._refresh_metadata(stream)
         # get an address, either leader or ISR follower.
         # get leader address
-        leader_addr = find_broker_addr_of_leader(self.meta_cache, stream.name,
-                                                 stream.subscribed_partition)
+        leader_addr = find_broker_addr(self.meta_cache, stream.name,
+                                       stream.subscribed_partition,
+                                       stream.read_isr_replica)
         # Refresh conn
         self.conn = BaseClient(ip_address=leader_addr)
         logger.debug('Creating a new subscription to: %s' % stream)
