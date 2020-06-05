@@ -17,6 +17,7 @@ class Message():
         correlation_id=None,
         offset=None,
         timestamp=None,
+        to_partition=None
     ):
         self.logger = getLogger(__name__)
         self.logger.addHandler(NullHandler())
@@ -28,6 +29,7 @@ class Message():
         self.ack_policy = python_liftbridge.api_pb2.AckPolicy.Value('NONE')
         self.offset = offset
         self.timestamp = timestamp
+        self.to_partition = to_partition
 
     def ack_policy_all(self):
         """Sets the ack policy to wait for all stream replicas to get the message."""
@@ -58,6 +60,8 @@ class Message():
             message.ackInbox = self.ack_inbox
         if self.correlation_id:
             message.correlationId = self.correlation_id
+        if self.to_partition:
+            message.partition = self.to_partition
         return message
 
     def _create_message(self):

@@ -18,7 +18,9 @@ class Stream():
         max_replication=False,
         start_offset=None,
         start_timestamp=None,
-        read_isr_replica=None
+        read_isr_replica=None,
+        partitions=1,
+        subscribed_partition=0
     ):
         self.logger = getLogger(__name__)
         self.logger.addHandler(NullHandler())
@@ -34,6 +36,8 @@ class Stream():
         self.start_offset = start_offset
         self.start_timestamp = start_timestamp
         self.read_isr_replica = read_isr_replica
+        self.partitions = partitions
+        self.subscribed_partition = subscribed_partition
 
     def start_at_offset(self, offset):
         """Sets the desired start offset to begin consuming from in the stream."""

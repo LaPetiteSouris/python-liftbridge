@@ -16,7 +16,7 @@ class BaseClient(object):
         Connect creates a Client connection for the given Liftbridge cluster.
     """
 
-    def __init__(self, ip_address='127.0.0.1:9292', timeout=5, tls_cert=None):
+    def __init__(self, ip_address, timeout=5, tls_cert=None):
         self.ip_address = ip_address
         self.timeout = timeout
         if tls_cert:

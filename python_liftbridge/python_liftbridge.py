@@ -35,8 +35,8 @@ class Lift(object):
         self._refresh_metadata(stream)
         # get an address, either leader or ISR follower.
         # get leader address
-        leader_addr = find_broker_addr_of_leader(self.meta_cache, stream.name)
-        print("leader is", leader_addr)
+        leader_addr = find_broker_addr_of_leader(self.meta_cache, stream.name,
+                                                 stream.subscribed_partition)
         # Refresh conn
         self.conn = BaseClient(ip_address=leader_addr)
         logger.debug('Creating a new subscription to: %s' % stream)
@@ -99,13 +99,14 @@ class Lift(object):
             name=stream.name,
             group=stream.group,
             replicationFactor=stream.replication_factor,
-        )
+            partitions=stream.partitions)
         return response
 
     def _subscribe_request(self, stream):
         subscribe_request_opts = {
             "stream": stream.name,
-            "startPosition": stream.start_position
+            "startPosition": stream.start_position,
+            "partition": stream.subscribed_partition
         }
 
         if stream.start_offset:
@@ -120,7 +121,8 @@ class Lift(object):
     def _create_publish_request(self, message):
         publish_request_option = {
             "stream": message.stream,
-            "value": message.value
+            "value": message.value,
+            "partition": message.partition
         }
         try:
             publish_request_option["key"] = message.key
