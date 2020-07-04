@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import NamedTuple
+from typing import NamedTuple
 import random
 from logging import getLogger
 
@@ -27,7 +27,7 @@ class StreamInfo(NamedTuple):
 
 
 class MetaData(object):
-    def __init__(self, brokers, streams, addr):
+    def __init__(self, brokers=None, streams=None, addr=None):
         self.brokers = list
         self.streams = list
         self.addr = list
@@ -40,15 +40,13 @@ class MetaData(object):
     def find_partition_by_id(entries, id):
         return next(x for x in entries if x.id == id)
 
-    @staticmethod
-    def find_broker_addr(self, metadata, stream_name, partition,
-                         read_isr_replica):
-        stream = next(x for x in metadata.streams if x.name == stream_name)
+    def find_broker_addr(self, stream_name, partition, read_isr_replica):
+        stream = next(x for x in self.streams if x.name == stream_name)
         partition_of_stream = MetaData.find_partition_by_id(
             stream.partitions, partition)
         if not read_isr_replica:
             leader = partition_of_stream.leader
-            leader_info = MetaData.find_broker_by_id(metadata.brokers, leader)
+            leader_info = MetaData.find_broker_by_id(self.brokers, leader)
             return leader_info.host + ":" + str(leader_info.port)
         random_isr = random.choice(partition_of_stream.isr)
         return random_isr.host + ":" + str(random_isr.port)

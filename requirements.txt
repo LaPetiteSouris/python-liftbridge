@@ -1,0 +1,4 @@
+# gRCP tools
+grpcio
+grpcio-tools
+pytest
